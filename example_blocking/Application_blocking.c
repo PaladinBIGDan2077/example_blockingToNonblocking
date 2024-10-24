@@ -96,7 +96,8 @@ unsigned colormix(unsigned r,unsigned g,unsigned b) {
 void Application_loop(Application* app, HAL* hal)
 {
     static bool pause = false;
-
+    static int frameIndex = 0;
+    static int frameOffset = 0;
     // LED1 is toggled whenever Launchpad S1 is tapped (goes from released to pressed)
     // This is based on an FSM for push-button as well as a debouncing FSM
     if (Button_isTapped(&hal->launchpadS1)) {
@@ -127,20 +128,18 @@ void Application_loop(Application* app, HAL* hal)
     r = 25; // red color is kept constant
 
     if (!pause) {
+        g = frameIndex*2;
+        b = 254 - g;
+        Graphics_setForegroundColor(&app->gfx.context, colormix(r,g,b));
+        Graphics_drawLineH(&app->gfx.context, 0, 127, (frameIndex+frameOffset)%128);
 
-        int frameIndex = 0;
-        int frameOffset = 0;
 
-        for (frameOffset =0; frameOffset < 128; frameOffset++)
-        {
-            for (frameIndex = 0; frameIndex<128; frameIndex++)
-            {
-                // gradually increase green and reduce blue
-                g = frameIndex*2;
-                b = 254 - g;
-
-                Graphics_setForegroundColor(&app->gfx.context, colormix(r,g,b));
-                Graphics_drawLineH(&app->gfx.context, 0, 127, (frameIndex+frameOffset)%128);
+        frameIndex++;
+        if (frameIndex > 127) {
+            frameIndex = 0;
+            frameOffset++;
+            if (frameOffset > 127) {
+                frameOffset = 0;
             }
 
         }
